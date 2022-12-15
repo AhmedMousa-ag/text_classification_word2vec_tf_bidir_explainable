@@ -5,9 +5,11 @@ import os
 import config
 import pandas as pd
 from Utils.model_builder import load_model
-from Utils.preprocess.preprocess import preprocess_data
+from Utils.preprocess.preprocess import preprocess_data, prep_NUMERIC, prep_TEXT
 import logging
 import os
+from abc import ABC, abstractmethod
+
 logging.disable(logging.WARNING)
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
@@ -18,8 +20,21 @@ SAVED_TEST_PRED_PATH = config.SAVED_TEST_PRED_PATH
 seed = config.RAND_SEED
 tf.random.set_seed(seed)
 
+class __predictor_base():
+    """This is a base class for predictor to ensure that the most important functions will be available"""    
+    @abstractmethod
+    def predict_explain(self,text):
+        """This function takes text as string input. for text explaining using lime
+        P.S: text processing happens here
+        return: np array of prediction probabilities for each label"""
+        pass
 
-class Predictor():
+    @abstractmethod
+    def get_class_names(self):
+        pass
+    
+
+class Predictor(__predictor_base):
     def __init__(self, data=None, model=None):
 
         if model is None:
@@ -30,6 +45,8 @@ class Predictor():
         if not data is None:
             self.preprocessor = preprocess_data(
                 data, train=False, shuffle_data=False)
+
+        self.text_vectorizer = None
 
     def predict_test(self, data=None):  # called for test prediction
         if not data is None:
@@ -68,6 +85,28 @@ class Predictor():
         results_pd = results_pd.sort_values(by=[id_col_name])
         return results_pd
 
+
+    def predict_explain(self,text: str):
+        """This function takes text as string input.
+        P.S: text processing happens here
+        return: np array of prediction probabilities for each label"""
+        if not isinstance(text,list):
+            text = list(text)
+        if len(text)<1:
+            text = np.expand_dims(text,axis=0)
+
+        preds = self.model.predict(text)
+        if preds.shape[1] >1:
+            return preds
+        else:
+            return np.array([[float(1-x),float(x)] for x in preds])
+        
+
+    def get_class_names(self):
+        encoder = prep_NUMERIC.get_Label_Encoder()
+        return list(encoder.classes_)
+    
+
     def predict_get_results(self, data=None):
         if not data is None:
             self.preprocessor = preprocess_data(
@@ -89,7 +128,7 @@ class Predictor():
         results_pd["prediction"] = preds
         results_pd = results_pd.sort_values(by=[id_col_name])
         return results_pd
-
+    
     def conv_labels_no_probability(self, preds):
         preds = np.array(tf.squeeze(preds))
         if len(preds.shape) < 2:
