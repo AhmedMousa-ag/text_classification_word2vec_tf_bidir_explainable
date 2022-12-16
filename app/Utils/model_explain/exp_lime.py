@@ -27,28 +27,35 @@ class explainer():
 
     def get_prediction(self):
         #TODO catch exception if didn't call explain_texts() first
-        self.index = np.argmax(self.exp.predict_proba)
-        prediction = self.class_names[self.index]
+        self.indx_pred = np.argmax(self.exp.predict_proba)
+        prediction = self.class_names[self.indx_pred]
         return prediction
     
 
     # TODO a function that gets all labels with their score
     def get_labels_score(self):
         output = {}
-        
         labels_with_score = {}
         predic_proba = self.exp.predict_proba
         for indx,label in enumerate(self.class_names):
             labels_with_score[label] = predic_proba[indx]
-
-
         output["scores"] = labels_with_score
         return output
-    # TODO a function that uses exp.get_list(self.index) to get names of the word
 
-    # TODO a function that gets words place exp.as_map()[self.index]
 
-    # TODO a function that combine them all together and return:
+    def get_word_pos_score(self):
+        output = {}
+        words_list = self.exp.as_list(self.indx_pred)
+        words_map =  self.exp.as_map()[self.indx_pred]
+        words_with_score = {}
+        for i in range(len(words_list)):
+            word_pos = words_map[i][0]
+            word_name = words_list[i][0]
+            word_score = words_map[i][1]
+            words_with_score[word_name] = {'position':word_pos,'score':word_score}
+        output['explanations'] = words_with_score
+        return output
+
     '''{
     "predictions":[
         {
