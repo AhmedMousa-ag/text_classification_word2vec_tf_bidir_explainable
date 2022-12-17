@@ -89,11 +89,11 @@ def infer():
 @app.route("/explain", methods=["POST"])
 def explain():
     """Get local explanations on a few samples. In this  server, we take data as CSV, convert
-    it to a pandas data frame for internal use and then convert the explanations back to CSV. 
+    it to a pandas data frame for internal use.
     Explanations come back using the ids passed in the input data.
     """    
     data = None
-    
+    print("started explaining")
     # Convert from CSV to pandas
     if flask.request.content_type == "text/csv":
         data = flask.request.data.decode("utf-8")
@@ -101,19 +101,18 @@ def explain():
         data = pd.read_csv(s)
     elif flask.request.content_type == 'application/json': # checks for json data
         data = flask.request.get_json()
-        data = pd.read_csv(data)
-    else:                
+        data = pd.DataFrame(data)
+    else:
         return flask.Response(
-            response="This predictor only supports json and CSV data", 
+            response="This predictor only supports CSV, and json data",  
             status=415, mimetype="text/plain"
         )
 
-    print(f"Invoked with {data.shape[0]} records")
     # Do the prediction
-    try: 
-        predictor = Predictor(model=model)
-        explain = explainer(predictor)
-        result = explain.produce_explainations(data)
+    try:
+        predictor =  Predictor(model=model)
+        explain =  explainer(predictor)
+        result =  explain.produce_explainations(data)
         result = json.dumps(result)
         return flask.Response(response=result, status=200, mimetype='application/json')
     except Exception as err:
