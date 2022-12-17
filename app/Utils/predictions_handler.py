@@ -120,6 +120,7 @@ class Predictor(__predictor_base_explain):
     def conv_labels_no_probability(self, preds):
         #preds = np.array(tf.squeeze(preds))
         if preds.shape[1] < 2:
+            preds = np.array(tf.squeeze(preds))
             if preds.size < 2:  # If passed one prediction it cause and error if not expanded dimension
                 prediction = np.array(tf.expand_dims(
                     tf.round(preds), axis=0), dtype=int)
