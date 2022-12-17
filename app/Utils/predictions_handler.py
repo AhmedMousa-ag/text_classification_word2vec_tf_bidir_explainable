@@ -90,9 +90,9 @@ class Predictor(__predictor_base_explain):
                 results_pd[uniqe_preds_names[1]] = pred
 
         # will convert get final prediction # uncomment if want to get final prediction column
-        #preds = self.conv_labels_no_probability(preds)
-        #preds = self.preprocessor.invers_labels(preds)
-        #results_pd["prediction"] = preds 
+        '''preds = self.conv_labels_no_probability(preds)
+        preds = self.preprocessor.invers_labels(preds)
+        results_pd["prediction"] = preds '''
         results_pd = results_pd.sort_values(by=[id_col_name])
         return results_pd
 
@@ -108,12 +108,9 @@ class Predictor(__predictor_base_explain):
         self.preprocessor.drop_ids()
         
         processed_data = self.preprocessor.get_data()
-
         preds = self.model.predict(processed_data)
         preds = self.conv_labels_no_probability(preds)
-
         preds = self.preprocessor.invers_labels(preds)
-
         results_pd = pd.DataFrame([])
         results_pd[id_col_name] = ids
         results_pd["prediction"] = preds
@@ -121,10 +118,9 @@ class Predictor(__predictor_base_explain):
         return results_pd
     
     def conv_labels_no_probability(self, preds):
-        preds = np.array(tf.squeeze(preds))
-        if len(preds.shape) < 2:
-
-            if preds.size < 2:  # If passed one prediction it cause and error if not expanded dimention
+        #preds = np.array(tf.squeeze(preds))
+        if preds.shape[1] < 2:
+            if preds.size < 2:  # If passed one prediction it cause and error if not expanded dimension
                 prediction = np.array(tf.expand_dims(
                     tf.round(preds), axis=0), dtype=int)
             else:
@@ -132,13 +128,13 @@ class Predictor(__predictor_base_explain):
 
             return prediction
         else:
-
-            if preds.size < 2:  # If passed one prediction it cause and error if not expanded dimenstion
+            if preds.size < 2:  # If passed one prediction it cause an error if not expanded dimenstion
                 prediction = np.array(tf.expand_dims(
-                    tf.argmax(preds, axis=1), axis=0), dtype=int)
+                    tf.argmax(preds,axis=1), axis=0), dtype=int)
+                
             else:
-                prediction = np.array(tf.argmax(preds, axis=1), dtype=int)
-
+                
+                prediction = np.array(tf.argmax(preds,axis=1), dtype=int)
             return prediction
 
     def save_predictions(self, save_path=SAVED_TEST_PRED_PATH):
