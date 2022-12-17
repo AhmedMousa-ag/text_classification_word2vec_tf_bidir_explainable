@@ -3,6 +3,9 @@
 from lime.lime_text import LimeTextExplainer
 import numpy as np
 import tensorflow as tf
+import json
+import os
+import glob
 
 
 class explainer():
@@ -16,8 +19,7 @@ class explainer():
         print("class names are: ", self.class_names)
         self.explainer = LimeTextExplainer(class_names=self.class_names)
 
-    def explain_texts(self, text, top_labels=None):
-        # TODO handle Id
+    def explain_texts(self, text: str, top_labels=None):
         num_feature = 20
         self.exp = self.explainer.explain_instance(text,
                                                    self.model_predictor.predict_explain,
@@ -43,7 +45,6 @@ class explainer():
         return output
 
     def get_word_pos_score(self):
-        output = {}
         words_list = self.exp.as_list(self.indx_pred)
         words_map = self.exp.as_map()[self.indx_pred]
         words_with_score = {}
@@ -53,11 +54,28 @@ class explainer():
             word_score = words_map[i][1]
             words_with_score[word_name] = {
                 'position': word_pos, 'score': word_score}
-        output['explanations'] = words_with_score
-        return output
+
+        return words_with_score
 
     # TODO a function that combine all for serving explanation
-    # TODO you must handle Id
+    def produce_explainations(self, data):
+        output = {}
+        id_col, text_col, targ_col = get_id_text_targ_col()
+        ids = data[id_col]
+        texts = data[text_col]
+        pred_list = []
+        for id, txt in zip(texts, ids):
+            result = {}
+            self.explain_texts(txt)
+            result[id_col] = id
+            result[targ_col] = self.get_prediction()
+            result['scores'] = self.get_labels_score()
+            result['explanations'] = self.get_word_pos_score()
+            pred_list.append(result)
+
+        output['predictions'] = pred_list
+        return output
+
     '''{
     "predictions":[
         {
@@ -82,3 +100,24 @@ class explainer():
         ]
     }
     '''
+
+
+def read_data_config_schema():
+    """The only reason we are producing schema here and not using Utils or preprocessor is that
+    we would like to generalize this exp_lime to almost all text classification algo at Ready Tensor."""
+    try:
+        path = glob.glob(os.path.join(os.pardir, "ml_vol",
+                         'inputs', 'data_config', '*.json'))[0]
+        json_data = json.load(open(path))
+        return json_data
+    except:
+        raise Exception(f"Error reading json file at: {path}")
+
+def get_id_text_targ_col():
+    """The only reason we are producing schema here and not using Utils or preprocessor is that
+    we would like to generalize this exp_lime to almost all text classification algo at Ready Tensor."""
+    schema = read_data_config_schema()
+    id_col = schema['inputDatasets']['textClassificationBaseMainInput']['idField']
+    text_col = schema['inputDatasets']['textClassificationBaseMainInput']['documentField']
+    targ_col = schema['inputDatasets']['textClassificationBaseMainInput']['targetField']
+    return id_col, text_col, targ_col
