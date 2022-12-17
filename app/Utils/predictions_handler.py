@@ -20,21 +20,32 @@ SAVED_TEST_PRED_PATH = config.SAVED_TEST_PRED_PATH
 seed = config.RAND_SEED
 tf.random.set_seed(seed)
 
-class __predictor_base():
-    """This is a base class for predictor to ensure that the most important functions will be available"""    
-    @abstractmethod
-    def predict_explain(self,text):
-        """This function takes text as string input. for text explaining using lime
+class __predictor_base_explain():
+    """This is a base class for predictor to insure that the most important functions will be available,
+    please modify next function as how it suits your algo, just be careful to the output"""    
+  
+    def predict_explain(self,text: str):
+        """This function takes text as string input.
         P.S: text processing happens here
         return: np array of prediction probabilities for each label"""
-        pass
+        if not isinstance(text,list):
+            text = list(text)
+        if len(text)<1:
+            text = np.expand_dims(text,axis=0)
 
-    @abstractmethod
+        preds = self.model.predict(text)
+        if preds.shape[1] >1:
+            return preds
+        else:
+            return np.array([[float(1-x),float(x)] for x in preds])
+        
+
     def get_class_names(self):
-        pass
+        encoder = prep_NUMERIC.get_Label_Encoder()
+        return list(encoder.classes_)
     
 
-class Predictor(__predictor_base):
+class Predictor(__predictor_base_explain):
     def __init__(self, data=None, model=None):
 
         if model is None:
@@ -85,26 +96,6 @@ class Predictor(__predictor_base):
         results_pd = results_pd.sort_values(by=[id_col_name])
         return results_pd
 
-
-    def predict_explain(self,text: str):
-        """This function takes text as string input.
-        P.S: text processing happens here
-        return: np array of prediction probabilities for each label"""
-        if not isinstance(text,list):
-            text = list(text)
-        if len(text)<1:
-            text = np.expand_dims(text,axis=0)
-
-        preds = self.model.predict(text)
-        if preds.shape[1] >1:
-            return preds
-        else:
-            return np.array([[float(1-x),float(x)] for x in preds])
-        
-
-    def get_class_names(self):
-        encoder = prep_NUMERIC.get_Label_Encoder()
-        return list(encoder.classes_)
     
 
     def predict_get_results(self, data=None):
