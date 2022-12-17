@@ -6,6 +6,7 @@ import json
 import os
 import glob
 
+# TODO document module file
 
 class explainer():
     def __init__(self, model_predictor):
@@ -29,7 +30,6 @@ class explainer():
         return self.exp
 
     def get_prediction(self):
-        # TODO catch exception if didn't call explain_texts() first
         self.indx_pred = np.argmax(self.exp.predict_proba)
         prediction = self.class_names[self.indx_pred]
         return prediction
@@ -39,7 +39,7 @@ class explainer():
         labels_with_score = {}
         predic_proba = self.exp.predict_proba
         for indx, label in enumerate(self.class_names):
-            labels_with_score[label] = predic_proba[indx]
+            labels_with_score[label] = str(predic_proba[indx])
         output["scores"] = labels_with_score
         return output
 
@@ -48,15 +48,14 @@ class explainer():
         words_map = self.exp.as_map()[self.indx_pred]
         words_with_score = {}
         for i in range(len(words_list)):
-            word_pos = words_map[i][0]
-            word_name = words_list[i][0]
-            word_score = words_map[i][1]
+            word_pos = str(words_map[i][0])
+            word_name = str(words_list[i][0])
+            word_score = str(words_map[i][1])
             words_with_score[word_name] = {
                 'position': word_pos, 'score': word_score}
 
         return words_with_score
 
-    # TODO a function that combine all for serving explanation
     def produce_explainations(self, data):
         output = {}
         id_col, text_col, targ_col = get_id_text_targ_col()
