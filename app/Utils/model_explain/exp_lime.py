@@ -1,8 +1,7 @@
-"""This module for model explainabilty using lime"""
+"""This module for model explainable using lime"""
 
 from lime.lime_text import LimeTextExplainer
 import numpy as np
-import tensorflow as tf
 import json
 import os
 import glob
@@ -64,9 +63,10 @@ class explainer():
         ids = data[id_col]
         texts = data[text_col]
         pred_list = []
-        for id, txt in zip(texts, ids):
+        for id, txt in zip(ids,texts):
             result = {}
-            self.explain_texts(txt)
+            print(f"raw text: {txt}")
+            self.explain_texts(text=txt)
             result[id_col] = id
             result[targ_col] = self.get_prediction()
             result['scores'] = self.get_labels_score()
@@ -105,9 +105,9 @@ class explainer():
 def read_data_config_schema():
     """The only reason we are producing schema here and not using Utils or preprocessor is that
     we would like to generalize this exp_lime to almost all text classification algo at Ready Tensor."""
-    try:
-        path = glob.glob(os.path.join(os.pardir, "ml_vol",
-                         'inputs', 'data_config', '*.json'))[0]
+    #path = glob.glob(os.path.join(os.pardir, "ml_vol", 'inputs', 'data_config', '*.json'))[0] #TODO uncomment
+    path = glob.glob(os.path.join("opt", "ml_vol", 'inputs', 'data_config', '*.json'))[0] 
+    try: 
         json_data = json.load(open(path))
         return json_data
     except:
