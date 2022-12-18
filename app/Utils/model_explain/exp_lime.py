@@ -8,11 +8,14 @@ import glob
 
 # TODO document module file
 
+
 class explainer():
     def __init__(self, model_predictor):
         """Use this class for explaining predictions
         Args:
-        model_predictor: is the model predictor class
+        model_predictor: is the model predictor class, the class must have to function,
+            1- get_class_names()--> return list of class names, and 
+            2- predict_explain()--> takes string data to process, make prediction and return probabilities for each class
         """
         self.model_predictor = model_predictor
         self.class_names = self.model_predictor.get_class_names()
@@ -20,7 +23,8 @@ class explainer():
         self.explainer = LimeTextExplainer(class_names=self.class_names)
 
     def explain_texts(self, text: str, top_labels=None):
-        num_feature = 20
+        """Make lime computations and produce explain object that has results will be accessed later"""
+        num_feature = 20  # Number of tokens to explain
         self.exp = self.explainer.explain_instance(text,
                                                    self.model_predictor.predict_explain,
                                                    labels=range(
@@ -30,11 +34,13 @@ class explainer():
         return self.exp
 
     def get_prediction(self):
+        """Returns final prediction class"""
         self.indx_pred = np.argmax(self.exp.predict_proba)
         prediction = self.class_names[self.indx_pred]
         return prediction
 
     def get_labels_score(self):
+        """Returns each label with their predicted probability """
         output = {}
         labels_with_score = {}
         predic_proba = self.exp.predict_proba
@@ -44,6 +50,7 @@ class explainer():
         return output
 
     def get_word_pos_score(self):
+        """Returns a dictionary containing each word with their position and score"""
         words_list = self.exp.as_list(self.indx_pred)
         words_map = self.exp.as_map()[self.indx_pred]
         words_with_score = {}
@@ -57,12 +64,13 @@ class explainer():
         return words_with_score
 
     def produce_explainations(self, data):
+        """Takes data to explain and return a dictionary with predictions, labels and words with their position and score"""
         output = {}
         id_col, text_col, targ_col = get_id_text_targ_col()
         ids = data[id_col]
         texts = data[text_col]
         pred_list = []
-        for id, txt in zip(ids,texts):
+        for id, txt in zip(ids, texts):
             result = {}
             print(f"raw text: {txt}")
             self.explain_texts(text=txt)
@@ -75,42 +83,17 @@ class explainer():
         output['predictions'] = pred_list
         return output
 
-    '''{
-    "predictions":[
-        {
-            "Id":3245,
-            "label":"ham",
-            "scores":{
-                "ham": score,
-                "spam":score
-                },
-            "explanations":{
-                "token1":{
-                    "position":"index",
-                    "score":score
-                },
-
-                "token2":{
-                    "position":"index",
-                    "score":score
-                }
-            }
-            }
-        ]
-    }
-    '''
-
 
 def read_data_config_schema():
     """The only reason we are producing schema here and not using Utils or preprocessor is that
     we would like to generalize this exp_lime to almost all text classification algo at Ready Tensor."""
-    #path = glob.glob(os.path.join(os.pardir, "ml_vol", 'inputs', 'data_config', '*.json'))[0] #TODO uncomment
-    path = glob.glob(os.path.join("opt", "ml_vol", 'inputs', 'data_config', '*.json'))[0] 
-    try: 
+    path = glob.glob(os.path.join(os.pardir, "ml_vol", 'inputs', 'data_config', '*.json'))[0] 
+    try:
         json_data = json.load(open(path))
         return json_data
     except:
         raise Exception(f"Error reading json file at: {path}")
+
 
 def get_id_text_targ_col():
     """The only reason we are producing schema here and not using Utils or preprocessor is that
