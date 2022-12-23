@@ -26,13 +26,13 @@ Utils consist of:
 
 1- model_explain: Where text explainability using Lime happens
 
-1- preprocess folder: has the preprocess classes to process data according to schema.
+2- preprocess folder: has the preprocess classes to process data according to schema.
 
-2- model_builder.py: where the Machine Learning model defined, built, and loaded.
+3- model_builder.py: where the Machine Learning model defined, built, and loaded.
 
-3- predictions_handler.py: called when needed a prediction for inference or testing/predic.
+4- predictions_handler.py: called when needed a prediction for inference or testing/predic.
 
-4- utils.py: general functions to help such as load json files.
+5- utils.py: general functions to help such as load json files.
 
 #### train
 
