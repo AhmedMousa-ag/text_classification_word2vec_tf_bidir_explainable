@@ -2,9 +2,9 @@
 
 ## Navigatie Code
 
-This code uses a pretrained word2vec embedding with a biderictional layers with tensorflow.
+This code uses a pretrained word2vec embedding with a bidirectional layers with tensorflow. Model also contains LIME Text Explainer which returns local explanations for predictions.This code uses a pretrained word2vec embedding with a bidirectional layers with tensorflow. Model also contains LIME Text Explainer which returns local explanations for predictions.
 
-### download_embedding.sh
+### Dockerfile
 
 Only change this file if you would like to change the trained embedding layer.
 
@@ -23,6 +23,8 @@ inference_app.py: is a file that declare infer/ping and predictions to requested
 #### Utils:
 
 Utils consist of:
+
+1- model_explain: Where text explainability using Lime happens
 
 1- preprocess folder: has the preprocess classes to process data according to schema.
 
